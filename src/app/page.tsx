@@ -1,18 +1,28 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Node, Category, ViewMode } from '@/types';
+import { Node, Category, CATEGORIES, ViewMode } from '@/types';
 import Canvas from '@/components/Canvas';
 import DetailPanel from '@/components/DetailPanel';
 import AddPanel from '@/components/AddPanel';
 import TopBar from '@/components/TopBar';
 import ListView from '@/components/ListView';
 import FAB from '@/components/FAB';
+import { ToastProvider, useToast } from '@/components/ui/Toast';
 import { useNodes } from '@/hooks/useNodes';
 
 export default function Home() {
+  return (
+    <ToastProvider>
+      <HomeContent />
+    </ToastProvider>
+  );
+}
+
+function HomeContent() {
   const { nodes, connections, hydrated, addNode, updateNode, moveNode, deleteNode, addConnection } =
     useNodes();
+  const { show: showToast } = useToast();
 
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('canvas');
@@ -36,8 +46,17 @@ export default function Home() {
       if (fromId === toId) return;
       addConnection({ id: crypto.randomUUID(), from: fromId, to: toId });
       setPendingConnectionFrom(null);
+      const from = nodes.find((n) => n.id === fromId);
+      const to = nodes.find((n) => n.id === toId);
+      if (from && to) {
+        showToast({
+          title: 'Connected',
+          description: `${from.label} → ${to.label}`,
+          variant: 'success',
+        });
+      }
     },
-    [addConnection],
+    [addConnection, nodes, showToast],
   );
 
   const handleSelect = useCallback((id: string | null) => setSelectedNodeId(id), []);
@@ -49,10 +68,18 @@ export default function Home() {
 
   const handleDelete = useCallback(
     (id: string) => {
+      const removed = nodes.find((n) => n.id === id);
       deleteNode(id);
       setSelectedNodeId(null);
+      if (removed) {
+        showToast({
+          title: 'Node deleted',
+          description: removed.label,
+          variant: 'danger',
+        });
+      }
     },
-    [deleteNode],
+    [deleteNode, nodes, showToast],
   );
 
   const handleAdd = useCallback(
@@ -73,8 +100,13 @@ export default function Home() {
       };
       addNode(newNode);
       setSelectedNodeId(newNode.id);
+      showToast({
+        title: `${CATEGORIES[category].name} added`,
+        description: label,
+        variant: 'success',
+      });
     },
-    [addNode],
+    [addNode, showToast],
   );
 
   useEffect(() => {

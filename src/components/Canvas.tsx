@@ -40,6 +40,15 @@ export default function Canvas({
     moved: boolean;
     pointerId: number;
   } | null>(null);
+  const panningRef = useRef<{
+    startScreenX: number;
+    startScreenY: number;
+    panStartX: number;
+    panStartY: number;
+    pointerId: number;
+    moved: boolean;
+  } | null>(null);
+  const panRef = useRef({ x: 0, y: 0 });
   const longPressTimerRef = useRef<number | null>(null);
   const animRef = useRef<number>(0);
 
@@ -85,27 +94,34 @@ export default function Canvas({
 
     const { nodes, connections, selectedNodeId, searchQuery, pendingConnectionFrom } =
       stateRef.current;
+    const { x: panX, y: panY } = panRef.current;
 
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.fillStyle = '#0A0A0A';
     ctx.fillRect(0, 0, cssW, cssH);
 
-    // Subtle grid
+    // Subtle grid — drawn in screen space using modulo of pan for a seamless
+    // infinite look as the user drags around.
     ctx.strokeStyle = 'rgba(255,255,255,0.025)';
     ctx.lineWidth = 1;
     const gs = 40;
-    for (let x = 0; x < cssW; x += gs) {
+    const gox = ((panX % gs) + gs) % gs;
+    const goy = ((panY % gs) + gs) % gs;
+    for (let x = gox; x < cssW; x += gs) {
       ctx.beginPath();
       ctx.moveTo(x, 0);
       ctx.lineTo(x, cssH);
       ctx.stroke();
     }
-    for (let y = 0; y < cssH; y += gs) {
+    for (let y = goy; y < cssH; y += gs) {
       ctx.beginPath();
       ctx.moveTo(0, y);
       ctx.lineTo(cssW, y);
       ctx.stroke();
     }
+
+    // Translate world origin by pan so connections & nodes move together.
+    ctx.translate(panX, panY);
 
     const sq = searchQuery.toLowerCase();
 
@@ -251,11 +267,23 @@ export default function Canvas({
 
   const handlePointerDown = (e: React.PointerEvent) => {
     if (e.button !== 0 && e.pointerType === 'mouse') return;
-    const { x, y } = getPos(e);
-    const node = getNodeAt(x, y, nodes);
+    const { x: sx, y: sy } = getPos(e);
+    const { x: panX, y: panY } = panRef.current;
+    const wx = sx - panX;
+    const wy = sy - panY;
+    const node = getNodeAt(wx, wy, nodes);
 
     if (!node) {
-      onNodeSelect(null);
+      // Begin canvas pan. Deselect only on a clean tap (handled in pointer-up).
+      (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
+      panningRef.current = {
+        startScreenX: sx,
+        startScreenY: sy,
+        panStartX: panX,
+        panStartY: panY,
+        pointerId: e.pointerId,
+        moved: false,
+      };
       return;
     }
 
@@ -279,10 +307,10 @@ export default function Canvas({
 
     draggingRef.current = {
       id: node.id,
-      offsetX: x - node.x,
-      offsetY: y - node.y,
-      startX: x,
-      startY: y,
+      offsetX: wx - node.x,
+      offsetY: wy - node.y,
+      startX: wx,
+      startY: wy,
       moved: false,
       pointerId: e.pointerId,
     };
@@ -301,20 +329,43 @@ export default function Canvas({
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
+    const p = panningRef.current;
+    if (p && p.pointerId === e.pointerId) {
+      const { x: sx, y: sy } = getPos(e);
+      const dx = sx - p.startScreenX;
+      const dy = sy - p.startScreenY;
+      if (!p.moved && dx * dx + dy * dy > LONG_PRESS_MOVE_TOLERANCE * LONG_PRESS_MOVE_TOLERANCE) {
+        p.moved = true;
+      }
+      panRef.current = { x: p.panStartX + dx, y: p.panStartY + dy };
+      return;
+    }
+
     const d = draggingRef.current;
     if (!d || d.pointerId !== e.pointerId) return;
-    const { x, y } = getPos(e);
-    const dx = x - d.startX;
-    const dy = y - d.startY;
+    const { x: sx, y: sy } = getPos(e);
+    const wx = sx - panRef.current.x;
+    const wy = sy - panRef.current.y;
+    const dx = wx - d.startX;
+    const dy = wy - d.startY;
     if (!d.moved && dx * dx + dy * dy > LONG_PRESS_MOVE_TOLERANCE * LONG_PRESS_MOVE_TOLERANCE) {
       d.moved = true;
       clearLongPress();
     }
-    onNodeMove(d.id, x - d.offsetX, y - d.offsetY);
+    onNodeMove(d.id, wx - d.offsetX, wy - d.offsetY);
   };
 
   const handlePointerUp = (e: React.PointerEvent) => {
     clearLongPress();
+
+    const p = panningRef.current;
+    if (p && p.pointerId === e.pointerId) {
+      // Clean tap on empty canvas → deselect. Drag → keep selection.
+      if (!p.moved) onNodeSelect(null);
+      panningRef.current = null;
+      return;
+    }
+
     if (draggingRef.current?.pointerId === e.pointerId) {
       draggingRef.current = null;
     }
@@ -323,7 +374,7 @@ export default function Canvas({
   return (
     <canvas
       ref={canvasRef}
-      className="w-full h-full cursor-crosshair touch-none"
+      className="w-full h-full cursor-grab active:cursor-grabbing touch-none"
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}

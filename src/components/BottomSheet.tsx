@@ -1,6 +1,8 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import * as Dialog from '@radix-ui/react-dialog';
+import { useCallback, useRef, useState } from 'react';
+import { cn } from '@/lib/cn';
 
 interface BottomSheetProps {
   open: boolean;
@@ -21,28 +23,9 @@ export default function BottomSheet({
   keyId,
   ariaLabel,
 }: BottomSheetProps) {
-  const sheetRef = useRef<HTMLDivElement>(null);
   const startY = useRef<number | null>(null);
   const currentY = useRef(0);
   const [dragOffset, setDragOffset] = useState(0);
-
-  useEffect(() => {
-    if (!open) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = prev;
-    };
-  }, [open]);
-
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [open, onClose]);
 
   const onPointerDown = useCallback((e: React.PointerEvent) => {
     startY.current = e.clientY;
@@ -72,42 +55,50 @@ export default function BottomSheet({
     }
   }, [onClose]);
 
-  if (!open) return null;
-
   return (
-    <div className="fixed inset-0 z-40 md:hidden">
-      <div
-        className="absolute inset-0 bg-black/60 backdrop-enter"
-        onClick={onClose}
-        aria-hidden="true"
-      />
-      <div
-        ref={sheetRef}
-        key={keyId}
-        role="dialog"
-        aria-modal="true"
-        aria-label={ariaLabel}
-        className="absolute left-0 right-0 bottom-0 bg-[#111111] border-t border-white/10 shadow-2xl sheet-enter flex flex-col"
-        style={{
-          borderTopLeftRadius: 'var(--sheet-radius)',
-          borderTopRightRadius: 'var(--sheet-radius)',
-          maxHeight: `${maxHeightVh}vh`,
-          transform: dragOffset ? `translateY(${dragOffset}px)` : undefined,
-          transition: dragOffset ? 'none' : 'transform 0.2s ease-out',
-          paddingBottom: 'var(--safe-bottom)',
-        }}
-      >
-        <div
-          className="shrink-0 cursor-grab active:cursor-grabbing touch-none"
-          onPointerDown={onPointerDown}
-          onPointerMove={onPointerMove}
-          onPointerUp={onPointerUp}
-          onPointerCancel={onPointerUp}
+    <Dialog.Root
+      open={open}
+      onOpenChange={(next) => {
+        if (!next) onClose();
+      }}
+    >
+      <Dialog.Portal>
+        <Dialog.Overlay className="fixed inset-0 z-40 bg-black/60 backdrop-enter md:hidden" />
+        <Dialog.Content
+          key={keyId}
+          aria-label={ariaLabel}
+          onOpenAutoFocus={(e) => {
+            // Avoid Radix forcibly scrolling the focused input into view on mobile
+            // (causes layout jumps with the keyboard). Let our own focus effects handle it.
+            e.preventDefault();
+          }}
+          className={cn(
+            'fixed left-0 right-0 bottom-0 z-40 flex flex-col',
+            'bg-[#111111] border-t border-white/10 shadow-2xl sheet-enter',
+            'md:hidden focus:outline-none',
+          )}
+          style={{
+            borderTopLeftRadius: 'var(--sheet-radius)',
+            borderTopRightRadius: 'var(--sheet-radius)',
+            maxHeight: `${maxHeightVh}vh`,
+            transform: dragOffset ? `translateY(${dragOffset}px)` : undefined,
+            transition: dragOffset ? 'none' : 'transform 0.2s ease-out',
+            paddingBottom: 'var(--safe-bottom)',
+          }}
         >
-          <div className="sheet-handle" />
-        </div>
-        <div className="flex-1 min-h-0 overflow-y-auto">{children}</div>
-      </div>
-    </div>
+          <Dialog.Title className="sr-only">{ariaLabel ?? 'Sheet'}</Dialog.Title>
+          <div
+            className="shrink-0 cursor-grab active:cursor-grabbing touch-none"
+            onPointerDown={onPointerDown}
+            onPointerMove={onPointerMove}
+            onPointerUp={onPointerUp}
+            onPointerCancel={onPointerUp}
+          >
+            <div className="sheet-handle" />
+          </div>
+          <div className="flex-1 min-h-0 overflow-y-auto">{children}</div>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
   );
 }
