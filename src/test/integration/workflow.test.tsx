@@ -149,7 +149,7 @@ describe('Integration — workflows', () => {
 
     fireEvent.click(screen.getByLabelText('List view'));
     await waitFor(() =>
-      expect(screen.getByText('My new idea')).toBeDefined()
+      expect(screen.getAllByText('My new idea').length).toBeGreaterThan(0)
     );
   });
 

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Node, Connection, Category, CATEGORIES, CATEGORY_ORDER } from '@/types';
 import BottomSheet from './BottomSheet';
 import DeleteConfirm from './DeleteConfirm';
+import ScrollArea from './ui/ScrollArea';
 
 interface DetailPanelProps {
   node: Node;
@@ -103,20 +104,22 @@ export default function DetailPanel({
             <label className="text-[10px] tracking-[0.2em] text-white/45 uppercase block mb-2">
               Connections ({connectedNodes.length})
             </label>
-            <div className="space-y-1.5 md:max-h-36 md:overflow-y-auto">
-              {connectedNodes.map((cn) => (
-                <button
-                  key={cn.id}
-                  onClick={() => onNavigate(cn.id)}
-                  className="w-full text-left text-xs md:text-[11px] text-white/75 hover:text-white/95 bg-[#1a1a1a] hover:bg-[#222] active:bg-[#262626] border border-white/5 rounded-lg px-3 py-3 md:py-2 transition-colors flex items-center gap-2.5 min-h-[44px] md:min-h-0"
-                >
-                  <span className="text-[9px] text-white/30 shrink-0 uppercase tracking-[0.2em]">
-                    {CATEGORIES[cn.category].name}
-                  </span>
-                  <span className="truncate">{cn.label}</span>
-                </button>
-              ))}
-            </div>
+            <ScrollArea className="md:max-h-36">
+              <div className="space-y-1.5 pr-1">
+                {connectedNodes.map((cn) => (
+                  <button
+                    key={cn.id}
+                    onClick={() => onNavigate(cn.id)}
+                    className="w-full text-left text-xs md:text-[11px] text-white/75 hover:text-white/95 bg-[#1a1a1a] hover:bg-[#222] active:bg-[#262626] border border-white/5 rounded-lg px-3 py-3 md:py-2 transition-colors flex items-center gap-2.5 min-h-[44px] md:min-h-0"
+                  >
+                    <span className="text-[9px] text-white/30 shrink-0 uppercase tracking-[0.2em]">
+                      {CATEGORIES[cn.category].name}
+                    </span>
+                    <span className="truncate">{cn.label}</span>
+                  </button>
+                ))}
+              </div>
+            </ScrollArea>
           </div>
         )}
       </div>
@@ -207,20 +210,22 @@ export default function DetailPanel({
               <label className="text-[10px] tracking-[0.2em] text-white/45 uppercase block mb-2">
                 Connections ({connectedNodes.length})
               </label>
-              <div className="space-y-1 max-h-40 overflow-y-auto pr-1">
-                {connectedNodes.map((cn) => (
-                  <button
-                    key={cn.id}
-                    onClick={() => onNavigate(cn.id)}
-                    className="w-full text-left text-[11px] text-white/70 hover:text-white/95 bg-[#1a1a1a] hover:bg-[#222] border border-white/5 rounded px-2.5 py-2 transition-colors flex items-center gap-2"
-                  >
-                    <span className="text-[9px] text-white/30 shrink-0 uppercase tracking-[0.2em]">
-                      {CATEGORIES[cn.category].name}
-                    </span>
-                    <span className="truncate">{cn.label}</span>
-                  </button>
-                ))}
-              </div>
+              <ScrollArea className="max-h-40">
+                <div className="space-y-1 pr-1">
+                  {connectedNodes.map((cn) => (
+                    <button
+                      key={cn.id}
+                      onClick={() => onNavigate(cn.id)}
+                      className="w-full text-left text-[11px] text-white/70 hover:text-white/95 bg-[#1a1a1a] hover:bg-[#222] border border-white/5 rounded px-2.5 py-2 transition-colors flex items-center gap-2"
+                    >
+                      <span className="text-[9px] text-white/30 shrink-0 uppercase tracking-[0.2em]">
+                        {CATEGORIES[cn.category].name}
+                      </span>
+                      <span className="truncate">{cn.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </ScrollArea>
             </div>
           )}
         </div>
