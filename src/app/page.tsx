@@ -1,56 +1,23 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Node, Connection, Category, ViewMode, PhilosophyState } from '@/types';
-import { EXAMPLE_STATE } from '@/data/examples';
+import { Node, Category, ViewMode } from '@/types';
+import { useNodes } from '@/hooks/useNodes';
 import Canvas from '@/components/Canvas';
 import DetailPanel from '@/components/DetailPanel';
 import AddPanel from '@/components/AddPanel';
 import TopBar from '@/components/TopBar';
 import ListView from '@/components/ListView';
 
-const STORAGE_KEY = 'philosophy-os:v1';
-const makeId = () => Math.random().toString(36).slice(2, 10);
-
 export default function Home() {
-  const [nodes, setNodes] = useState<Node[]>([]);
-  const [connections, setConnections] = useState<Connection[]>([]);
+  const { nodes, connections, hydrated, addNode, updateNode, moveNode, deleteNode, addConnection } = useNodes();
+
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('canvas');
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddPanel, setShowAddPanel] = useState(false);
   const [pendingConnectionFrom, setPendingConnectionFrom] = useState<string | null>(null);
-  const [hydrated, setHydrated] = useState(false);
   const canvasHostRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    try {
-      const raw = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null;
-      if (raw) {
-        const parsed = JSON.parse(raw) as Partial<PhilosophyState>;
-        if (parsed && Array.isArray(parsed.nodes) && Array.isArray(parsed.connections)) {
-          setNodes(parsed.nodes);
-          setConnections(parsed.connections);
-          setHydrated(true);
-          return;
-        }
-      }
-    } catch {
-      // ignore and seed
-    }
-    setNodes(EXAMPLE_STATE.nodes);
-    setConnections(EXAMPLE_STATE.connections);
-    setHydrated(true);
-  }, []);
-
-  useEffect(() => {
-    if (!hydrated) return;
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ nodes, connections }));
-    } catch {
-      // quota — ignore
-    }
-  }, [nodes, connections, hydrated]);
 
   const selectedNode = useMemo(
     () => nodes.find((n) => n.id === selectedNodeId) ?? null,
@@ -58,34 +25,26 @@ export default function Home() {
   );
 
   const handleNodeMove = useCallback((id: string, x: number, y: number) => {
-    setNodes((prev) => prev.map((n) => (n.id === id ? { ...n, x, y } : n)));
-  }, []);
+    moveNode(id, x, y);
+  }, [moveNode]);
 
   const handleConnect = useCallback((fromId: string, toId: string) => {
-    if (fromId === toId) return;
-    setConnections((prev) => {
-      const exists = prev.some(
-        (c) => (c.from === fromId && c.to === toId) || (c.from === toId && c.to === fromId)
-      );
-      if (exists) return prev;
-      return [...prev, { id: `${fromId}__${toId}__${Date.now()}`, from: fromId, to: toId }];
-    });
+    addConnection(fromId, toId);
     setPendingConnectionFrom(null);
-  }, []);
+  }, [addConnection]);
 
   const handleSelect = useCallback((id: string | null) => {
     setSelectedNodeId(id);
   }, []);
 
   const handleUpdate = useCallback((id: string, patch: Partial<Node>) => {
-    setNodes((prev) => prev.map((n) => (n.id === id ? { ...n, ...patch } : n)));
-  }, []);
+    updateNode(id, patch);
+  }, [updateNode]);
 
   const handleDelete = useCallback((id: string) => {
-    setNodes((prev) => prev.filter((n) => n.id !== id));
-    setConnections((prev) => prev.filter((c) => c.from !== id && c.to !== id));
+    deleteNode(id);
     setSelectedNodeId(null);
-  }, []);
+  }, [deleteNode]);
 
   const handleAdd = useCallback((category: Category, label: string) => {
     const host = canvasHostRef.current;
@@ -93,18 +52,10 @@ export default function Home() {
     const h = host?.clientHeight ?? 800;
     const angle = Math.random() * Math.PI * 2;
     const dist = 40 + Math.random() * 140;
-    const newNode: Node = {
-      id: makeId(),
-      category,
-      label,
-      notes: '',
-      x: w / 2 + Math.cos(angle) * dist,
-      y: h / 2 + Math.sin(angle) * dist,
-      createdAt: Date.now(),
-    };
-    setNodes((prev) => [...prev, newNode]);
-    setSelectedNodeId(newNode.id);
-  }, []);
+    const x = w / 2 + Math.cos(angle) * dist;
+    const y = h / 2 + Math.sin(angle) * dist;
+    addNode(category, label, x, y);
+  }, [addNode]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -126,6 +77,8 @@ export default function Home() {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [selectedNodeId]);
+
+  if (!hydrated) return null;
 
   return (
     <div className="fixed inset-0 bg-[#0A0A0A] text-white/90 overflow-hidden">
