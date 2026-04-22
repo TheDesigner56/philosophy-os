@@ -182,8 +182,19 @@ export default function Home() {
 
       {pendingConnectionFrom && (
         <div className="absolute top-16 left-1/2 -translate-x-1/2 z-30 bg-[#111] border border-white/15 text-white/70 text-[10px] tracking-[0.2em] uppercase px-3 py-1.5 rounded">
-          Connect mode · click another node · esc to cancel
+          Connect mode · tap another node · esc to cancel
         </div>
+      )}
+
+      {/* FAB — mobile primary action (hidden when add panel or detail panel is open) */}
+      {!showAddPanel && !selectedNode && viewMode === 'canvas' && (
+        <button
+          onClick={() => setShowAddPanel(true)}
+          className="fixed bottom-6 right-5 md:hidden w-14 h-14 rounded-full bg-white text-[#0A0A0A] shadow-2xl flex items-center justify-center text-2xl font-light z-20 fab-enter active:scale-95 transition-transform select-none"
+          aria-label="Add node"
+        >
+          +
+        </button>
       )}
     </div>
   );
