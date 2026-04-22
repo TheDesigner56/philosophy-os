@@ -50,25 +50,27 @@ export function useNodes() {
 
   useEffect(() => {
     async function load() {
-      try {
-        const [{ data: nodeRows, error: ne }, { data: connRows, error: ce }] =
-          await Promise.all([
-            supabase.from('nodes').select('*').order('created_at'),
-            supabase.from('connections').select('*'),
-          ]);
+      if (supabase) {
+        try {
+          const [{ data: nodeRows, error: ne }, { data: connRows, error: ce }] =
+            await Promise.all([
+              supabase.from('nodes').select('*').order('created_at'),
+              supabase.from('connections').select('*'),
+            ]);
 
-        if (!ne && !ce) {
-          supAvailable.current = true;
-          if (nodeRows && nodeRows.length > 0) {
-            setNodes((nodeRows as DbNode[]).map(dbToNode));
-            setConnections(((connRows ?? []) as DbConnection[]).map(dbToConn));
-            setHydrated(true);
-            return;
+          if (!ne && !ce) {
+            supAvailable.current = true;
+            if (nodeRows && nodeRows.length > 0) {
+              setNodes((nodeRows as DbNode[]).map(dbToNode));
+              setConnections(((connRows ?? []) as DbConnection[]).map(dbToConn));
+              setHydrated(true);
+              return;
+            }
+            // Supabase reachable but empty — fall through to localStorage seed
           }
-          // Supabase reachable but empty — fall through to localStorage seed
+        } catch {
+          // Network error — fall through to localStorage
         }
-      } catch {
-        // Network error — fall through to localStorage
       }
 
       try {
@@ -106,7 +108,7 @@ export function useNodes() {
 
   const addNode = useCallback(async (node: Node) => {
     setNodes((prev) => [...prev, node]);
-    if (!supAvailable.current) return;
+    if (!supabase || !supAvailable.current) return;
     await supabase.from('nodes').insert({
       id: node.id,
       text: node.label,
@@ -119,7 +121,7 @@ export function useNodes() {
 
   const updateNode = useCallback(async (id: string, patch: Partial<Node>) => {
     setNodes((prev) => prev.map((n) => (n.id === id ? { ...n, ...patch } : n)));
-    if (!supAvailable.current) return;
+    if (!supabase || !supAvailable.current) return;
     const dbPatch: Record<string, unknown> = {};
     if (patch.label !== undefined) dbPatch.text = patch.label;
     if (patch.category !== undefined) dbPatch.category = patch.category;
@@ -131,10 +133,11 @@ export function useNodes() {
 
   const moveNode = useCallback((id: string, x: number, y: number) => {
     setNodes((prev) => prev.map((n) => (n.id === id ? { ...n, x, y } : n)));
-    if (!supAvailable.current) return;
+    if (!supabase || !supAvailable.current) return;
     const existing = moveTimers.current.get(id);
     if (existing) clearTimeout(existing);
     const t = setTimeout(async () => {
+      if (!supabase) return;
       await supabase.from('nodes').update({ x, y }).eq('id', id);
       moveTimers.current.delete(id);
     }, POSITION_DEBOUNCE_MS);
@@ -144,7 +147,7 @@ export function useNodes() {
   const deleteNode = useCallback(async (id: string) => {
     setNodes((prev) => prev.filter((n) => n.id !== id));
     setConnections((prev) => prev.filter((c) => c.from !== id && c.to !== id));
-    if (!supAvailable.current) return;
+    if (!supabase || !supAvailable.current) return;
     await supabase.from('nodes').delete().eq('id', id);
   }, []);
 
@@ -158,7 +161,7 @@ export function useNodes() {
       if (exists) return prev;
       return [...prev, conn];
     });
-    if (!supAvailable.current) return;
+    if (!supabase || !supAvailable.current) return;
     await supabase
       .from('connections')
       .upsert(
