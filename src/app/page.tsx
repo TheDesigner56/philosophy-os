@@ -1,110 +1,81 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Node, Connection, Category, ViewMode, PhilosophyState } from '@/types';
-import { EXAMPLE_STATE } from '@/data/examples';
+import { Node, Category, ViewMode } from '@/types';
 import Canvas from '@/components/Canvas';
 import DetailPanel from '@/components/DetailPanel';
 import AddPanel from '@/components/AddPanel';
 import TopBar from '@/components/TopBar';
 import ListView from '@/components/ListView';
-
-const STORAGE_KEY = 'philosophy-os:v1';
-const makeId = () => Math.random().toString(36).slice(2, 10);
+import FAB from '@/components/FAB';
+import { useNodes } from '@/hooks/useNodes';
 
 export default function Home() {
-  const [nodes, setNodes] = useState<Node[]>([]);
-  const [connections, setConnections] = useState<Connection[]>([]);
+  const { nodes, connections, hydrated, addNode, updateNode, moveNode, deleteNode, addConnection } =
+    useNodes();
+
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('canvas');
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddPanel, setShowAddPanel] = useState(false);
   const [pendingConnectionFrom, setPendingConnectionFrom] = useState<string | null>(null);
-  const [hydrated, setHydrated] = useState(false);
   const canvasHostRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    try {
-      const raw = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null;
-      if (raw) {
-        const parsed = JSON.parse(raw) as Partial<PhilosophyState>;
-        if (parsed && Array.isArray(parsed.nodes) && Array.isArray(parsed.connections)) {
-          setNodes(parsed.nodes);
-          setConnections(parsed.connections);
-          setHydrated(true);
-          return;
-        }
-      }
-    } catch {
-      // ignore and seed
-    }
-    setNodes(EXAMPLE_STATE.nodes);
-    setConnections(EXAMPLE_STATE.connections);
-    setHydrated(true);
-  }, []);
-
-  useEffect(() => {
-    if (!hydrated) return;
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ nodes, connections }));
-    } catch {
-      // quota — ignore
-    }
-  }, [nodes, connections, hydrated]);
 
   const selectedNode = useMemo(
     () => nodes.find((n) => n.id === selectedNodeId) ?? null,
-    [nodes, selectedNodeId]
+    [nodes, selectedNodeId],
   );
 
-  const handleNodeMove = useCallback((id: string, x: number, y: number) => {
-    setNodes((prev) => prev.map((n) => (n.id === id ? { ...n, x, y } : n)));
-  }, []);
+  const handleNodeMove = useCallback(
+    (id: string, x: number, y: number) => moveNode(id, x, y),
+    [moveNode],
+  );
 
-  const handleConnect = useCallback((fromId: string, toId: string) => {
-    if (fromId === toId) return;
-    setConnections((prev) => {
-      const exists = prev.some(
-        (c) => (c.from === fromId && c.to === toId) || (c.from === toId && c.to === fromId)
-      );
-      if (exists) return prev;
-      return [...prev, { id: `${fromId}__${toId}__${Date.now()}`, from: fromId, to: toId }];
-    });
-    setPendingConnectionFrom(null);
-  }, []);
+  const handleConnect = useCallback(
+    (fromId: string, toId: string) => {
+      if (fromId === toId) return;
+      addConnection({ id: crypto.randomUUID(), from: fromId, to: toId });
+      setPendingConnectionFrom(null);
+    },
+    [addConnection],
+  );
 
-  const handleSelect = useCallback((id: string | null) => {
-    setSelectedNodeId(id);
-  }, []);
+  const handleSelect = useCallback((id: string | null) => setSelectedNodeId(id), []);
 
-  const handleUpdate = useCallback((id: string, patch: Partial<Node>) => {
-    setNodes((prev) => prev.map((n) => (n.id === id ? { ...n, ...patch } : n)));
-  }, []);
+  const handleUpdate = useCallback(
+    (id: string, patch: Partial<Node>) => updateNode(id, patch),
+    [updateNode],
+  );
 
-  const handleDelete = useCallback((id: string) => {
-    setNodes((prev) => prev.filter((n) => n.id !== id));
-    setConnections((prev) => prev.filter((c) => c.from !== id && c.to !== id));
-    setSelectedNodeId(null);
-  }, []);
+  const handleDelete = useCallback(
+    (id: string) => {
+      deleteNode(id);
+      setSelectedNodeId(null);
+    },
+    [deleteNode],
+  );
 
-  const handleAdd = useCallback((category: Category, label: string) => {
-    const host = canvasHostRef.current;
-    const w = host?.clientWidth ?? 1200;
-    const h = host?.clientHeight ?? 800;
-    const angle = Math.random() * Math.PI * 2;
-    const dist = 40 + Math.random() * 140;
-    const newNode: Node = {
-      id: makeId(),
-      category,
-      label,
-      notes: '',
-      x: w / 2 + Math.cos(angle) * dist,
-      y: h / 2 + Math.sin(angle) * dist,
-      createdAt: Date.now(),
-    };
-    setNodes((prev) => [...prev, newNode]);
-    setSelectedNodeId(newNode.id);
-  }, []);
+  const handleAdd = useCallback(
+    (category: Category, label: string) => {
+      const host = canvasHostRef.current;
+      const w = host?.clientWidth ?? 1200;
+      const h = host?.clientHeight ?? 800;
+      const angle = Math.random() * Math.PI * 2;
+      const dist = 40 + Math.random() * 140;
+      const newNode: Node = {
+        id: crypto.randomUUID(),
+        category,
+        label,
+        notes: '',
+        x: w / 2 + Math.cos(angle) * dist,
+        y: h / 2 + Math.sin(angle) * dist,
+        createdAt: Date.now(),
+      };
+      addNode(newNode);
+      setSelectedNodeId(newNode.id);
+    },
+    [addNode],
+  );
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -127,6 +98,8 @@ export default function Home() {
     return () => window.removeEventListener('keydown', onKey);
   }, [selectedNodeId]);
 
+  if (!hydrated) return null;
+
   return (
     <div className="fixed inset-0 bg-[#0A0A0A] text-white/90 overflow-hidden">
       <TopBar
@@ -140,7 +113,7 @@ export default function Home() {
       />
 
       {viewMode === 'canvas' ? (
-        <div ref={canvasHostRef} className="absolute inset-0 pt-12">
+        <div ref={canvasHostRef} key="canvas-view" className="absolute inset-0 pt-12 view-enter">
           <Canvas
             nodes={nodes}
             connections={connections}
@@ -150,18 +123,21 @@ export default function Home() {
             onNodeSelect={handleSelect}
             onNodeMove={handleNodeMove}
             onConnect={handleConnect}
+            onRequestConnect={(id) => setPendingConnectionFrom(id)}
           />
         </div>
       ) : (
-        <ListView
-          nodes={nodes}
-          connections={connections}
-          searchQuery={searchQuery}
-          onSelect={(id) => {
-            setSelectedNodeId(id);
-            setViewMode('canvas');
-          }}
-        />
+        <div key="list-view" className="absolute inset-0 view-enter">
+          <ListView
+            nodes={nodes}
+            connections={connections}
+            searchQuery={searchQuery}
+            onSelect={(id) => {
+              setSelectedNodeId(id);
+              setViewMode('canvas');
+            }}
+          />
+        </div>
       )}
 
       {selectedNode && viewMode === 'canvas' && (
@@ -176,25 +152,18 @@ export default function Home() {
         />
       )}
 
-      {showAddPanel && (
-        <AddPanel onAdd={handleAdd} onClose={() => setShowAddPanel(false)} />
+      {showAddPanel && <AddPanel onAdd={handleAdd} onClose={() => setShowAddPanel(false)} />}
+
+      {/* Mobile FAB */}
+      {viewMode === 'canvas' && !showAddPanel && !selectedNode && (
+        <FAB onClick={() => setShowAddPanel(true)} />
       )}
+      {viewMode === 'list' && !showAddPanel && <FAB onClick={() => setShowAddPanel(true)} />}
 
       {pendingConnectionFrom && (
         <div className="absolute top-16 left-1/2 -translate-x-1/2 z-30 bg-[#111] border border-white/15 text-white/70 text-[10px] tracking-[0.2em] uppercase px-3 py-1.5 rounded">
           Connect mode · tap another node · esc to cancel
         </div>
-      )}
-
-      {/* FAB — mobile primary action (hidden when add panel or detail panel is open) */}
-      {!showAddPanel && !selectedNode && viewMode === 'canvas' && (
-        <button
-          onClick={() => setShowAddPanel(true)}
-          className="fixed bottom-6 right-5 md:hidden w-14 h-14 rounded-full bg-white text-[#0A0A0A] shadow-2xl flex items-center justify-center text-2xl font-light z-20 fab-enter active:scale-95 transition-transform select-none"
-          aria-label="Add node"
-        >
-          +
-        </button>
       )}
     </div>
   );

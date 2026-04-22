@@ -3,6 +3,9 @@
 :root {
   --background: #0A0A0A;
   --foreground: #EDEDED;
+  --sheet-radius: 20px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-top: env(safe-area-inset-top, 0px);
 }
 
 html,
@@ -30,12 +33,10 @@ body,
 }
 
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
-::-webkit-scrollbar-track {
-  background: transparent;
-}
+::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.08);
   border-radius: 4px;
@@ -44,13 +45,9 @@ body,
   background: rgba(255, 255, 255, 0.18);
 }
 
-.scrollbar-none {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-.scrollbar-none::-webkit-scrollbar {
-  display: none;
-}
+/* Hide the horizontal scrollbar on the category-pill rail while keeping scroll */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
 .line-clamp-2 {
   display: -webkit-box;
@@ -59,55 +56,82 @@ body,
   overflow: hidden;
 }
 
-/* Mic recording pulse */
+/* Record button pulse */
 @keyframes pulse-rec {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.4; }
 }
-.pulse-rec {
-  animation: pulse-rec 1.2s ease-in-out infinite;
-}
+.pulse-rec { animation: pulse-rec 1.2s ease-in-out infinite; }
 
-/* Bottom sheet slide-up */
-@keyframes sheet-slide-up {
-  from {
-    transform: translateY(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
+/* Pulsing red ring for recording state */
+@keyframes ring-pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+  70%  { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+.ring-pulse { animation: ring-pulse 1.4s ease-out infinite; }
+
+/* Bottom sheet: slide up */
+@keyframes sheet-up {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
 }
 .sheet-enter {
-  animation: sheet-slide-up 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: sheet-up 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-/* Backdrop fade in */
-@keyframes backdrop-in {
+/* Backdrop fade */
+@keyframes backdrop-fade {
   from { opacity: 0; }
-  to { opacity: 1; }
+  to   { opacity: 1; }
 }
 .backdrop-enter {
-  animation: backdrop-in 0.2s ease both;
+  animation: backdrop-fade 0.2s ease-out both;
 }
 
-/* FAB entrance */
-@keyframes fab-pop {
-  from {
-    transform: scale(0.6);
-    opacity: 0;
-  }
-  to {
-    transform: scale(1);
-    opacity: 1;
-  }
+/* Dialog zoom-in */
+@keyframes dialog-in {
+  from { opacity: 0; transform: translate(-50%, -50%) scale(0.96); }
+  to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+.dialog-enter {
+  animation: dialog-in 0.18s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Fab scale-in */
+@keyframes fab-in {
+  from { transform: scale(0.6); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
 }
 .fab-enter {
-  animation: fab-pop 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: fab-in 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 
-/* Safe area inset for bottom sheets */
-.pb-safe {
-  padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
+/* Generic fade-in for view transitions */
+@keyframes view-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.view-enter {
+  animation: view-in 0.22s ease-out both;
+}
+
+/* Safe-area helpers */
+.pb-safe { padding-bottom: calc(16px + var(--safe-bottom)); }
+.mb-safe { margin-bottom: var(--safe-bottom); }
+.pt-safe { padding-top: calc(0px + var(--safe-top)); }
+
+/* Drag handle for bottom sheet */
+.sheet-handle {
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.18);
+  margin: 8px auto 4px;
+}
+
+/* Min touch target helper (44px WCAG) */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
 }
