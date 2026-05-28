@@ -1,45 +1,125 @@
-export type Category = 'form' | 'goal' | 'problem' | 'thought' | 'shadow';
+// Stoic OS — core domain models.
+// Every type here maps to one of two user outcomes: Calm or Disciplined.
 
-export interface Node {
+/** The two transformations the product sells. */
+export type Outcome = 'calm' | 'discipline';
+
+/** Lesson tracks mirror the two outcomes. */
+export type Track = Outcome;
+
+/** Visual/topical theme used for quote rotation + share-card styling. */
+export type Theme = 'calm' | 'discipline' | 'general';
+
+export interface Quote {
   id: string;
-  category: Category;
-  label: string;
-  notes: string;
-  x: number;
-  y: number;
-  createdAt: number;
-}
-
-export interface Connection {
-  id: string;
-  from: string;
-  to: string;
-}
-
-export interface PhilosophyState {
-  nodes: Node[];
-  connections: Connection[];
-}
-
-export type ViewMode = 'canvas' | 'list';
-
-export interface CategoryMeta {
-  key: Category;
-  name: string;
-  radius: number;
-  fill: string;
-  stroke: string;
   text: string;
-  glow: boolean;
-  order: number;
+  author: string;
+  theme: Theme;
 }
 
-export const CATEGORIES: Record<Category, CategoryMeta> = {
-  form:    { key: 'form',    name: 'Form',    radius: 28, fill: '#F5F5F5', stroke: '#FFFFFF', text: '#0A0A0A', glow: true,  order: 0 },
-  goal:    { key: 'goal',    name: 'Goal',    radius: 22, fill: '#C8C8C8', stroke: '#E0E0E0', text: '#0A0A0A', glow: false, order: 1 },
-  problem: { key: 'problem', name: 'Problem', radius: 20, fill: '#8A8A8A', stroke: '#A0A0A0', text: '#0A0A0A', glow: false, order: 2 },
-  thought: { key: 'thought', name: 'Thought', radius: 16, fill: '#555555', stroke: '#707070', text: '#F5F5F5', glow: false, order: 3 },
-  shadow:  { key: 'shadow',  name: 'Shadow',  radius: 14, fill: '#2A2A2A', stroke: '#404040', text: '#C8C8C8', glow: false, order: 4 },
-};
+export interface Lesson {
+  id: string;
+  track: Track;
+  title: string;
+  /** One concept, 60–90 sec read. */
+  body: string;
+  /** The single one-action takeaway. */
+  action: string;
+  /** Free starter lessons are unlocked without Pro. */
+  free: boolean;
+}
 
-export const CATEGORY_ORDER: Category[] = ['form', 'goal', 'problem', 'thought', 'shadow'];
+/** A single journaling prompt belonging to a pack. */
+export interface Prompt {
+  id: string;
+  text: string;
+  /** Optional follow-up shown after the first answer (e.g. evening "why"). */
+  followUp?: string;
+}
+
+export interface PromptPack {
+  id: string;
+  outcome: Outcome;
+  title: string;
+  description: string;
+  prompts: Prompt[];
+  /** Free-form is the only free pack; structured packs are Pro. */
+  free: boolean;
+}
+
+export interface JournalEntry {
+  id: string;
+  /** ms epoch — when the entry was written. */
+  createdAt: number;
+  /** Pack the entry came from, if any (free-form entries have none). */
+  packId?: string;
+  promptId?: string;
+  text: string;
+  /** 1–5, optional quick self-rating, feeds analytics. */
+  mood?: number;
+  /** 1–5, how reactive the user felt; lower is calmer. */
+  reactivity?: number;
+}
+
+export interface StreakState {
+  current: number;
+  longest: number;
+  /** dayKey (YYYY-MM-DD) of the last day a qualifying action happened. */
+  lastActiveDay: string | null;
+  /** Pro: streak insurance — 1 freeze granted per month. */
+  freezesRemaining: number;
+  /** monthKey (YYYY-MM) the current freeze allotment was granted for. */
+  freezeMonth: string | null;
+}
+
+/** Lightweight first-party analytics events (no third-party tracking). */
+export type AnalyticsName =
+  | 'onboarding_start'
+  | 'onboarding_complete'
+  | 'quote_view'
+  | 'quote_save'
+  | 'quote_share'
+  | 'journal_save'
+  | 'lesson_complete'
+  | 'paywall_view'
+  | 'trial_start'
+  | 'purchase'
+  | 'streak_increment';
+
+export interface AnalyticsEvent {
+  name: AnalyticsName;
+  at: number;
+  meta?: Record<string, string | number | boolean>;
+}
+
+export interface UserPrefs {
+  onboarded: boolean;
+  /** Which outcomes the user picked in onboarding (drives starting content). */
+  outcomes: Outcome[];
+  /** Local reminder time "HH:MM", null if not set. */
+  reminderTime: string | null;
+  notificationsEnabled: boolean;
+}
+
+/** Subscription products. Prices are placeholders for the web build —
+ *  on iOS these come from App Store Connect, never hard-coded. */
+export type ProductId = 'annual' | 'monthly' | 'founding';
+
+export interface Product {
+  id: ProductId;
+  title: string;
+  /** Display price string. TODO(decision): pull live from StoreKit on iOS. */
+  price: string;
+  period: string;
+  blurb: string;
+  /** Days of free trial (0 = none). */
+  trialDays: number;
+  badge?: string;
+}
+
+export type Tab = 'today' | 'journal' | 'lessons' | 'progress';
+
+export const OUTCOMES: { key: Outcome; label: string; tagline: string }[] = [
+  { key: 'calm', label: 'Calm', tagline: 'Stop overreacting. Reset fast.' },
+  { key: 'discipline', label: 'Disciplined', tagline: 'Show up daily without willpower.' },
+];
