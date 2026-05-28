@@ -41,7 +41,7 @@ vi.mock('@/components/Canvas', () => ({
 }));
 
 // ── Lazy import after mock is registered ──────────────────────────────────────
-import Home from '@/app/page';
+import Home from '@/components/PhilosophyApp';
 
 describe('Integration — workflows', () => {
   beforeEach(() => {
