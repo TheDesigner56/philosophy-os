@@ -1,0 +1,86 @@
+import { Lesson } from '@/types';
+
+// Bundled lessons. First 3 are free (the starter set); the rest are Pro.
+// Each is one concept + one action — a 60–90 sec read.
+export const LESSONS: Lesson[] = [
+  {
+    id: 'l-dichotomy',
+    track: 'calm',
+    title: 'The Dichotomy of Control',
+    body: "The single most useful idea in Stoicism: some things are up to you, most are not. Your judgments, choices, and effort are yours. Other people, outcomes, the weather, the past — not yours. Almost all anxiety comes from gripping what we can't control. The cure is to draw the line clearly, then pour your energy onto your side of it.",
+    action: "Name one thing rattling you right now. Say out loud: 'This part is mine, that part isn't.'",
+    free: true,
+  },
+  {
+    id: 'l-pause',
+    track: 'calm',
+    title: 'The Space Before the Reaction',
+    body: "Between what happens and how you respond there is a gap. Untrained, the gap is a millisecond. Trained, it widens — and in that space lives your freedom. The Stoics practiced delay: when provoked, do nothing for one breath. The impression ('this is an insult') is not yet a fact. You get to decide what it means.",
+    action: 'Next time you feel the heat rise, take one slow breath before saying or sending anything.',
+    free: true,
+  },
+  {
+    id: 'l-amorfati',
+    track: 'discipline',
+    title: 'Show Up Before You Feel Like It',
+    body: "Discipline isn't a feeling you wait for — it's an action you take while the feeling is absent. Motivation follows movement, not the other way around. The Stoic shows up to the task as a duty, not a mood. Lower the bar to 'just begin': two minutes, one rep, one line. Starting is the whole battle; momentum does the rest.",
+    action: 'Pick the thing you’re avoiding. Do the smallest possible version of it for two minutes now.',
+    free: true,
+  },
+  {
+    id: 'l-premeditatio',
+    track: 'calm',
+    title: 'Rehearse the Worst (Calmly)',
+    body: "Premeditatio malorum: deliberately imagine what could go wrong. Not to spiral, but to defang. When you've already met the worst case in your mind and seen that you'd survive it, fear loses its grip. The unprepared mind catastrophizes; the prepared mind says, 'Yes — and I could handle even that.'",
+    action: 'Take one worry. Ask: what’s the worst realistic outcome, and how would I cope? Write the answer.',
+    free: false,
+  },
+  {
+    id: 'l-view',
+    track: 'calm',
+    title: 'The View From Above',
+    body: "Zoom out. Picture your situation from high above — your city, your country, the turning earth, the span of centuries. Most of what feels enormous shrinks to its true size from that height. This isn't denial; it's proportion. The Stoics used the cosmic view to keep small things small.",
+    action: 'Picture today’s biggest stressor from orbit. Ask: will this matter in five years?',
+    free: false,
+  },
+  {
+    id: 'l-evening',
+    track: 'discipline',
+    title: 'The Evening Review',
+    body: "Seneca ended each day with three questions: What did I do well? What did I do badly? What could I do better? Not to punish himself — to learn. A short, honest review turns each day into a rep. You're not grading; you're adjusting. Over weeks, the small corrections compound into character.",
+    action: 'Tonight, answer: one thing I did well, one I’d redo, one I’ll change tomorrow.',
+    free: false,
+  },
+  {
+    id: 'l-voluntary',
+    track: 'discipline',
+    title: 'Practice Voluntary Discomfort',
+    body: "Occasionally choose the harder path on purpose — the cold shower, the skipped snack, the early alarm. Not as punishment, but as training. When you've voluntarily tasted discomfort, the discomforts life hands you lose their power to derail you. You prove to yourself: I can be fine with less.",
+    action: 'Pick one small comfort to skip today. Notice you’re still fine without it.',
+    free: false,
+  },
+  {
+    id: 'l-amorfati2',
+    track: 'calm',
+    title: 'Amor Fati — Love What Happens',
+    body: "Don't merely accept what happens — learn to want it. Amor fati, 'love of fate,' is the move from gritted-teeth tolerance to genuine welcome. The event already happened; resistance only adds suffering on top. Ask not 'why me?' but 'what does this make possible?' The obstacle becomes material.",
+    action: 'Take one annoyance from today. Find one genuine way it could serve you.',
+    free: false,
+  },
+  {
+    id: 'l-otherpeople',
+    track: 'calm',
+    title: 'Other People Will Be Difficult',
+    body: "Marcus began each day reminding himself he'd meet the ungrateful, the rude, the selfish — and that they act so out of ignorance of good and evil. Expecting difficulty removes the sting of surprise. You can't control their behavior, only whether you let it dye your own mind.",
+    action: 'Before a hard interaction today, pre-decide: their behavior won’t set my mood.',
+    free: false,
+  },
+  {
+    id: 'l-enough',
+    track: 'discipline',
+    title: 'Define Enough',
+    body: "Desire without a ceiling is a treadmill. The Stoics measured wealth not by what you have but by how few wants you carry. When you name what 'enough' looks like, you stop being yanked by every new craving and start choosing on purpose. Discipline is easier when you're not fighting endless wants.",
+    action: 'Write one sentence: ‘Enough for me, in this area, looks like ___.’',
+    free: false,
+  },
+];

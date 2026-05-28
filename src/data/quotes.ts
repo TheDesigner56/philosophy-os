@@ -1,0 +1,36 @@
+import { Quote } from '@/types';
+
+// Bundled quote set — ships with the app so day-1 works offline.
+// Remote sync (src/lib/content.ts) can extend/replace this at runtime.
+export const QUOTES: Quote[] = [
+  { id: 'q-marcus-control', text: 'You have power over your mind — not outside events. Realize this, and you will find strength.', author: 'Marcus Aurelius', theme: 'calm' },
+  { id: 'q-marcus-obstacle', text: 'The impediment to action advances action. What stands in the way becomes the way.', author: 'Marcus Aurelius', theme: 'discipline' },
+  { id: 'q-marcus-today', text: 'When you arise in the morning, think of what a privilege it is to be alive — to think, to enjoy, to love.', author: 'Marcus Aurelius', theme: 'general' },
+  { id: 'q-marcus-waste', text: 'You could leave life right now. Let that determine what you do and say and think.', author: 'Marcus Aurelius', theme: 'discipline' },
+  { id: 'q-marcus-opinion', text: 'Everything we hear is an opinion, not a fact. Everything we see is a perspective, not the truth.', author: 'Marcus Aurelius', theme: 'calm' },
+  { id: 'q-marcus-within', text: 'Look well into thyself; there is a source of strength which will always spring up if thou wilt always look.', author: 'Marcus Aurelius', theme: 'calm' },
+  { id: 'q-seneca-suffer', text: 'We suffer more often in imagination than in reality.', author: 'Seneca', theme: 'calm' },
+  { id: 'q-seneca-time', text: 'It is not that we have a short time to live, but that we waste a lot of it.', author: 'Seneca', theme: 'discipline' },
+  { id: 'q-seneca-luck', text: 'Luck is what happens when preparation meets opportunity.', author: 'Seneca', theme: 'discipline' },
+  { id: 'q-seneca-difficult', text: 'It is not because things are difficult that we do not dare; it is because we do not dare that they are difficult.', author: 'Seneca', theme: 'discipline' },
+  { id: 'q-seneca-anger', text: 'The greatest remedy for anger is delay.', author: 'Seneca', theme: 'calm' },
+  { id: 'q-seneca-storm', text: 'A gem cannot be polished without friction, nor a man perfected without trials.', author: 'Seneca', theme: 'general' },
+  { id: 'q-epictetus-control', text: 'Make the best use of what is in your power, and take the rest as it happens.', author: 'Epictetus', theme: 'calm' },
+  { id: 'q-epictetus-disturb', text: 'Men are disturbed not by things, but by the views which they take of things.', author: 'Epictetus', theme: 'calm' },
+  { id: 'q-epictetus-want', text: 'Wealth consists not in having great possessions, but in having few wants.', author: 'Epictetus', theme: 'general' },
+  { id: 'q-epictetus-talk', text: 'No man is free who is not master of himself.', author: 'Epictetus', theme: 'discipline' },
+  { id: 'q-epictetus-act', text: "First say to yourself what you would be; and then do what you have to do.", author: 'Epictetus', theme: 'discipline' },
+  { id: 'q-epictetus-silent', text: 'It is impossible for a man to learn what he thinks he already knows.', author: 'Epictetus', theme: 'general' },
+  { id: 'q-marcus-waste2', text: 'Do not act as if you had ten thousand years to live. While it is in your power, be good.', author: 'Marcus Aurelius', theme: 'discipline' },
+  { id: 'q-marcus-now', text: 'Confine yourself to the present.', author: 'Marcus Aurelius', theme: 'calm' },
+  { id: 'q-seneca-begin', text: 'Every new beginning comes from some other beginning’s end.', author: 'Seneca', theme: 'general' },
+  { id: 'q-seneca-fear', text: 'We are more often frightened than hurt; and we suffer more from imagination than from reality.', author: 'Seneca', theme: 'calm' },
+  { id: 'q-epictetus-circ', text: 'It’s not what happens to you, but how you react to it that matters.', author: 'Epictetus', theme: 'calm' },
+  { id: 'q-epictetus-habit', text: 'Every habit and capability is confirmed and grows in its corresponding actions.', author: 'Epictetus', theme: 'discipline' },
+  { id: 'q-marcus-people', text: 'The best revenge is not to be like your enemy.', author: 'Marcus Aurelius', theme: 'calm' },
+  { id: 'q-marcus-soul', text: 'The soul becomes dyed with the color of its thoughts.', author: 'Marcus Aurelius', theme: 'general' },
+  { id: 'q-seneca-road', text: 'If one does not know to which port one is sailing, no wind is favorable.', author: 'Seneca', theme: 'discipline' },
+  { id: 'q-epictetus-bear', text: 'No great thing is created suddenly, any more than a bunch of grapes or a fig.', author: 'Epictetus', theme: 'discipline' },
+  { id: 'q-marcus-waste3', text: 'Concentrate every minute like a Roman — on doing what’s in front of you with precise and genuine seriousness.', author: 'Marcus Aurelius', theme: 'discipline' },
+  { id: 'q-seneca-present', text: 'True happiness is to enjoy the present, without anxious dependence upon the future.', author: 'Seneca', theme: 'calm' },
+];
