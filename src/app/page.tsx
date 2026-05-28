@@ -1,170 +1,64 @@
-'use client';
-
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Node, Category, ViewMode } from '@/types';
-import Canvas from '@/components/Canvas';
-import DetailPanel from '@/components/DetailPanel';
-import AddPanel from '@/components/AddPanel';
-import TopBar from '@/components/TopBar';
-import ListView from '@/components/ListView';
-import FAB from '@/components/FAB';
-import { useNodes } from '@/hooks/useNodes';
+import Hero from '@/components/Hero';
 
 export default function Home() {
-  const { nodes, connections, hydrated, addNode, updateNode, moveNode, deleteNode, addConnection } =
-    useNodes();
-
-  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<ViewMode>('canvas');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [showAddPanel, setShowAddPanel] = useState(false);
-  const [pendingConnectionFrom, setPendingConnectionFrom] = useState<string | null>(null);
-  const canvasHostRef = useRef<HTMLDivElement>(null);
-
-  const selectedNode = useMemo(
-    () => nodes.find((n) => n.id === selectedNodeId) ?? null,
-    [nodes, selectedNodeId],
-  );
-
-  const handleNodeMove = useCallback(
-    (id: string, x: number, y: number) => moveNode(id, x, y),
-    [moveNode],
-  );
-
-  const handleConnect = useCallback(
-    (fromId: string, toId: string) => {
-      if (fromId === toId) return;
-      addConnection({ id: crypto.randomUUID(), from: fromId, to: toId });
-      setPendingConnectionFrom(null);
-    },
-    [addConnection],
-  );
-
-  const handleSelect = useCallback((id: string | null) => setSelectedNodeId(id), []);
-
-  const handleUpdate = useCallback(
-    (id: string, patch: Partial<Node>) => updateNode(id, patch),
-    [updateNode],
-  );
-
-  const handleDelete = useCallback(
-    (id: string) => {
-      deleteNode(id);
-      setSelectedNodeId(null);
-    },
-    [deleteNode],
-  );
-
-  const handleAdd = useCallback(
-    (category: Category, label: string) => {
-      const host = canvasHostRef.current;
-      const w = host?.clientWidth ?? 1200;
-      const h = host?.clientHeight ?? 800;
-      const angle = Math.random() * Math.PI * 2;
-      const dist = 40 + Math.random() * 140;
-      const newNode: Node = {
-        id: crypto.randomUUID(),
-        category,
-        label,
-        notes: '',
-        x: w / 2 + Math.cos(angle) * dist,
-        y: h / 2 + Math.sin(angle) * dist,
-        createdAt: Date.now(),
-      };
-      addNode(newNode);
-      setSelectedNodeId(newNode.id);
-    },
-    [addNode],
-  );
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      const t = e.target as HTMLElement | null;
-      const inField =
-        !!t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable);
-      if (inField) return;
-      if (e.key === '+' || e.key === '=') {
-        e.preventDefault();
-        setShowAddPanel(true);
-      } else if (e.key === 'Escape') {
-        setShowAddPanel(false);
-        setSelectedNodeId(null);
-        setPendingConnectionFrom(null);
-      } else if (e.key === 'c' && selectedNodeId) {
-        setPendingConnectionFrom(selectedNodeId);
-      }
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [selectedNodeId]);
-
-  if (!hydrated) return null;
-
   return (
-    <div className="fixed inset-0 bg-[#0A0A0A] text-white/90 overflow-hidden">
-      <TopBar
-        nodes={nodes}
-        connectionCount={connections.length}
-        viewMode={viewMode}
-        searchQuery={searchQuery}
-        onViewModeChange={setViewMode}
-        onSearchChange={setSearchQuery}
-        onAddClick={() => setShowAddPanel(true)}
-      />
-
-      {viewMode === 'canvas' ? (
-        <div ref={canvasHostRef} key="canvas-view" className="absolute inset-0 pt-12 view-enter">
-          <Canvas
-            nodes={nodes}
-            connections={connections}
-            selectedNodeId={selectedNodeId}
-            searchQuery={searchQuery}
-            pendingConnectionFrom={pendingConnectionFrom}
-            onNodeSelect={handleSelect}
-            onNodeMove={handleNodeMove}
-            onConnect={handleConnect}
-            onRequestConnect={(id) => setPendingConnectionFrom(id)}
-          />
+    <main className="relative bg-[#0A0A0A] text-white/90">
+      {/* Header */}
+      <header className="absolute inset-x-0 top-0 z-10 flex items-center justify-between px-6 py-5 sm:px-10 lg:px-16">
+        <div className="flex flex-col leading-none">
+          <span className="text-[13px] font-light tracking-[0.28em] text-white">ΦΙΛΟΣΟΦΙΑ</span>
+          <span className="mt-1 text-[9px] uppercase tracking-[0.3em] text-white/30">Philosophy OS</span>
         </div>
-      ) : (
-        <div key="list-view" className="absolute inset-0 view-enter">
-          <ListView
-            nodes={nodes}
-            connections={connections}
-            searchQuery={searchQuery}
-            onSelect={(id) => {
-              setSelectedNodeId(id);
-              setViewMode('canvas');
-            }}
-          />
+        <a
+          href="#try"
+          className="rounded-full border border-white/15 px-4 py-2 text-xs uppercase tracking-[0.18em] text-white/60 transition-colors hover:border-white/35 hover:text-white/90"
+        >
+          Live map
+        </a>
+      </header>
+
+      <Hero />
+
+      {/* Live tool */}
+      <section id="try" className="border-t border-white/10 px-6 py-20 sm:px-10 lg:px-16">
+        <div className="mx-auto max-w-6xl">
+          <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
+            <div>
+              <p className="text-[11px] uppercase tracking-[0.32em] text-white/45">The app, today</p>
+              <h2 className="mt-3 text-2xl font-bold tracking-tight text-white sm:text-3xl">
+                Try the live map
+              </h2>
+              <p className="mt-3 max-w-xl text-sm leading-relaxed text-white/55 sm:text-base">
+                Map your goals, problems, and guiding principles as a constellation — then connect
+                what reinforces what. The widget will surface it on your home screen.
+              </p>
+            </div>
+            <a
+              href="/app"
+              className="shrink-0 rounded-full border border-white/20 px-5 py-2.5 text-sm text-white/80 transition-colors hover:border-white/45 hover:text-white"
+            >
+              Open full screen ↗
+            </a>
+          </div>
+
+          <div className="mt-8 h-[78vh] min-h-[520px] overflow-hidden rounded-2xl border border-white/12 bg-[#0A0A0A] shadow-2xl">
+            <iframe
+              src="/app"
+              title="Philosophy OS — live map"
+              loading="lazy"
+              className="h-full w-full border-0"
+            />
+          </div>
         </div>
-      )}
+      </section>
 
-      {selectedNode && viewMode === 'canvas' && (
-        <DetailPanel
-          node={selectedNode}
-          allNodes={nodes}
-          connections={connections}
-          onUpdate={handleUpdate}
-          onDelete={handleDelete}
-          onClose={() => setSelectedNodeId(null)}
-          onNavigate={(id) => setSelectedNodeId(id)}
-        />
-      )}
-
-      {showAddPanel && <AddPanel onAdd={handleAdd} onClose={() => setShowAddPanel(false)} />}
-
-      {/* Mobile FAB */}
-      {viewMode === 'canvas' && !showAddPanel && !selectedNode && (
-        <FAB onClick={() => setShowAddPanel(true)} />
-      )}
-      {viewMode === 'list' && !showAddPanel && <FAB onClick={() => setShowAddPanel(true)} />}
-
-      {pendingConnectionFrom && (
-        <div className="absolute top-16 left-1/2 -translate-x-1/2 z-30 bg-[#111] border border-white/15 text-white/70 text-[10px] tracking-[0.2em] uppercase px-3 py-1.5 rounded">
-          Connect mode · tap another node · esc to cancel
+      {/* Footer */}
+      <footer className="border-t border-white/10 px-6 py-10 sm:px-10 lg:px-16">
+        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 text-xs text-white/35 sm:flex-row">
+          <span className="tracking-[0.28em] text-white/45">ΦΙΛΟΣΟΦΙΑ</span>
+          <span>Live deliberately. © {new Date().getFullYear()} Philosophy OS.</span>
         </div>
-      )}
-    </div>
+      </footer>
+    </main>
   );
 }
